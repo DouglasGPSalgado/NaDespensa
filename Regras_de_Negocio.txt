@@ -1,0 +1,7 @@
+Regras de negócio:
+1. Não é permitido adicionar alimentos com a mesma data de validade e nome.
+2. Não é permitido adicionar alimentos com a quantidade menor ou igual a zero.
+3. Ao atualizar um alimento, a data de validade não pode ser anterior à data atual.
+4. Ao excluir um alimento, o servidor deve verificar se o alimento existe e se não há nenhuma transação pendente envolvendo o alimento.
+5. Ao buscar um alimento por ID, o servidor deve verificar se o alimento existe e se não há nenhuma transação pendente envolvendo o alimento.
+6. Ao buscar alimentos por nome, o servidor deve retornar apenas os alimentos que não estão vencidos e que possuem quantidade maior que zero.
