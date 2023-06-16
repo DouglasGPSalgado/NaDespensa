@@ -32,7 +32,7 @@ app.use(express.json());
 const User = require("./models/User");
 
 // Endpoint para criar um novo alimento
-app.post("/foods", async (req, res) => {
+app.post("/foods", checkToken, async (req, res) => {
   try {
     const food = new Food(req.body);
     await food.save();
@@ -43,7 +43,7 @@ app.post("/foods", async (req, res) => {
 });
 
 // Endpoint para atualizar um alimento existente
-app.put("/foods/:id", async (req, res) => {
+app.put("/foods/:id", checkToken, async (req, res) => {
   try {
     const food = await Food.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -58,7 +58,7 @@ app.put("/foods/:id", async (req, res) => {
 });
 
 // Endpoint para excluir um alimento
-app.delete("/foods/:id", async (req, res) => {
+app.delete("/foods/:id", checkToken, async (req, res) => {
   try {
     const food = await Food.findByIdAndDelete(req.params.id);
     if (!food) {
@@ -71,7 +71,7 @@ app.delete("/foods/:id", async (req, res) => {
 });
 
 // Endpoint para listar todos os alimentos
-app.get("/foods", async (req, res) => {
+app.get("/foods", checkToken, async (req, res) => {
   try {
     const foods = await Food.find();
     res.send(foods);
@@ -81,7 +81,7 @@ app.get("/foods", async (req, res) => {
 });
 
 // Endpoint para buscar um alimento por ID
-app.get("/foods/:id", async (req, res) => {
+app.get("/foods/:id", checkToken, async (req, res) => {
   try {
     const food = await Food.findById(req.params.id);
     if (!food) {
@@ -94,7 +94,7 @@ app.get("/foods/:id", async (req, res) => {
 });
 
 // Endpoint para buscar alimentos por nome
-app.get("/foods", async (req, res) => {
+app.get("/foods", checkToken, async (req, res) => {
   try {
     const foods = await Food.find({
       nome: req.query.nome,
@@ -107,7 +107,7 @@ app.get("/foods", async (req, res) => {
   }
 });
 
-// DASDSADSADASDASDSADASDSADSADASDASDASDASDASDASDASDSADASDASDASDASDSADSADSAADSADASDSADSADASDSDAS
+// ------------- Autenticação ----------------
 
 //Rota privada
 app.get("/user/:id", checkToken, async (req, res) => {
@@ -123,7 +123,7 @@ app.get("/user/:id", checkToken, async (req, res) => {
   res.status(200).json({ user });
 });
 
-function checkToken(req, res, next){
+async function  checkToken(req, res, next){
 
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(" ")[1]
@@ -133,8 +133,14 @@ function checkToken(req, res, next){
   }
   try{
     const secret = process.env.SECRET
+    console.log("---------------------------------");
+    console.log(authHeader);
+    console.log("---------------------------------");
+    console.log(token);
+    console.log("---------------------------------");
+    console.log(secret);
 
-    jwt.verify(token, secret)
+    return jwt.verify(token, secret, next())
     
   } catch (error) {
     console.log(error);
@@ -194,7 +200,7 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-//Logind de Usuário
+//Login de Usuário
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -230,8 +236,9 @@ app.post("/auth/login", async (req, res) => {
       },
       secret
     );
-
-    res.status(200).json({ msg: "Autenticação realizada com sucesso", token });
+      user_id = user._id
+      user_email = user.email
+    res.status(200).json({ msg: "Autenticação realizada com sucesso", token, user_id, user_email });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -246,12 +253,11 @@ const dbPassword = process.env.DB_PASS;
 
 // Inicialização do servidor
 mongoose
-  .connect(
-    `mongodb+srv://${dbUser}:${dbPassword}@cluster0.amk28ys.mongodb.net/AuthNaDespensa?retryWrites=true&w=majority`
-  )
+  .connect('mongodb://localhost/NaDespensa', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     app.listen(3000, () => {
       console.log("Conectou ao banco!");
+      mongoose.Promise = global.Promise;
     });
   })
   .catch((err) => console.log(err));
